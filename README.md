@@ -19,16 +19,15 @@
 |------|------|-------------|
 | Backend | Spring Boot | REST/HTML 컨트롤러, 서비스 로직 |
 | ORM | JPA / Spring Data JPA | DB CRUD, 관계형 데이터 관리 |
-| Template | Thymeleaf | 서버사이드 렌더링 HTML |
+| Template | Thymeleaf + Bootstrap | 서버사이드 렌더링 HTML, 최소 JS 사용  |
 | Search | Elasticsearch | 음식점 이름, 웨이팅 상태 빠른 검색 |
 | Messaging | Kafka | 웨이팅 상태 변경 실시간 알림 (publish/subscribe) |
 | Database | MySQL | 사용자 정보 및 웨이팅 데이터 |
 | Security | Spring Security + Session | 로그인 및 권한 관리 |
 | Frontend | Thymeleaf + 최소 JS | 폼 처리, 실시간 알림 WebSocket 연동 |
-| Logging / Monitoring | ELK (Elasticsearch + Logstash + Kibana) | 로그 수집, 검색, 시각화 및 문제 추적 |
-| Cloud | AWS (EC2, RDS, S3, MSK 등) | 인프라 배포, DB, Kafka 서비스 등 |
-| Build / Deploy | Maven/Gradle + Docker + GitHub Actions | 자동 빌드 및 배포 |
-
+| Logging / Monitoring | ELK (Elasticsearch + Logstash + Kibana) | 로그 수집, 검색, 시각화 및 문제 추적(로컬에서 콘솔 + Logback로 활용, ELK 배포 경험) |
+| Cloud | AWS (EC2, RDS, S3, MSK 등) | 인프라 배포, DB, Kafka 서비스 등 ( 로컬에서 테스트, 배포 경험용 EC2 ) |
+| Build / Deploy | Gradle + Docker + GitHub Actions | 자동 빌드 및 배포 |
 ---
 
 ## 프로젝트 구조 요약
