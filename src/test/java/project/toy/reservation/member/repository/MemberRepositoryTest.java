@@ -3,11 +3,16 @@ package project.toy.reservation.member.repository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
 import project.toy.reservation.member.entity.Member;
+import project.toy.reservation.member.entity.MemberStatus;
 import project.toy.reservation.member.entity.RoleStatus;
+
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ActiveProfiles("test")
 @DataJpaTest  // DB 관련 컴포넌트만 띄움
 public class MemberRepositoryTest {
 
@@ -22,6 +27,8 @@ public class MemberRepositoryTest {
                 .password("password")
                 .name("홍길동")
                 .role(RoleStatus.USER)
+                .status(MemberStatus.ACTIVE)
+                .createdAt(LocalDateTime.now())
                 .build();
 
         // when

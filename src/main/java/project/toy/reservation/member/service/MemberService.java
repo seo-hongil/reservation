@@ -10,6 +10,7 @@ import project.toy.reservation.member.entity.MemberStatus;
 import project.toy.reservation.member.entity.RoleStatus;
 import project.toy.reservation.member.repository.MemberRepository;
 
+
 @Service
 @RequiredArgsConstructor
 public class MemberService {

@@ -15,17 +15,11 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    // 메인화면
-    @GetMapping("/main")
-    public String main() {
-        return "main";
-    }
-
     // 회원가입
     @GetMapping("/member/signup")
     public String signupForm(Model model) {
         model.addAttribute("signUpRequest", new SignupRequest());
-        return "signup";
+        return "member/signup";
     }
 
     @PostMapping("/member/signup")
@@ -33,14 +27,14 @@ public class MemberController {
                                BindingResult bindingResult, Model model) {
 
         if (bindingResult.hasErrors()) {
-            return "signup";
+            return "member/signup";
         }
 
         try {
             memberService.register(signUpRequest);
         } catch (IllegalArgumentException e) {
             model.addAttribute("errorMessage", e.getMessage());
-            return "signup";
+            return "member/signup";
         }
 
         return "redirect:/member/login";

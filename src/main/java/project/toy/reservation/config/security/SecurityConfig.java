@@ -27,7 +27,8 @@ public class SecurityConfig {
 
                 // URL 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/member/signup", "/member/login").permitAll()
+                        .requestMatchers("/", "/main", "/member/signup", "/member/login").permitAll()
+                        .requestMatchers("/images/**", "slide/**").permitAll() // 정적 리소스 허용
                         .anyRequest().authenticated()
                 )
 
@@ -35,6 +36,7 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/member/login")             // 로그인 페이지 URL
                         .loginProcessingUrl("/member/login")   // 로그인 form POST URL
+                        .usernameParameter("email")
                         .defaultSuccessUrl("/main")  // 로그인 성공 후 이동
                         .failureUrl("/member/login?error=true")// 로그인 실패 시
                         .permitAll()

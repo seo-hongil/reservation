@@ -3,6 +3,8 @@ package project.toy.reservation.member.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Builder
@@ -17,10 +19,10 @@ public class Member {
     private String email;
 
     @Column(nullable = false)
-    private String password;
+    private String name;
 
     @Column(nullable = false)
-    private String name;
+    private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -29,6 +31,10 @@ public class Member {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MemberStatus status;
+
+    @Column(name = "created_at", updatable = false)
+    @Builder.Default
+    private LocalDateTime createdAt =LocalDateTime.now();
 
     public boolean isActive() {
         return this.status == MemberStatus.ACTIVE;
