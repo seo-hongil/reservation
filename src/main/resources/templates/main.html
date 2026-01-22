@@ -156,7 +156,6 @@
 </head>
 <body>
 <div class="container">
-
     <nav class="navbar">
         <a class="navbar-brand" href="#">예약해홍</a>
         <ul class="navbar-nav d-flex flex-row ms-auto">
@@ -165,6 +164,9 @@
             </li>
             <li class="nav-item" sec:authorize="!isAuthenticated()">
                 <a class="nav-link" th:href="@{/member/signup}">회원가입</a>
+            </li>
+            <li class="nav-item" sec:authorize="isAuthenticated()">
+                <a class="nav-link" th:href="@{/member/mypage}">마이페이지</a>
             </li>
             <li class="nav-item" sec:authorize="isAuthenticated()">
                 <form th:action="@{/member/logout}" method="post" class="d-inline">
@@ -222,26 +224,54 @@
     </div>
 
     <div class="category-row">
-        <div class="category-item">
-            <img th:src="@{/images/restaurant.png}" alt="식당" />
-            식당
-        </div>
-        <div class="category-item">
-            <img th:src="@{/images/cafe.svg}" alt="카페/베이커리" />
-            카페/베이커리
-        </div>
-        <div class="category-item">
-            <img th:src="@{/images/pub.svg}" alt="주점" />
-            주점
-        </div>
-        <div class="category-item">
-            <img th:src="@{/images/hotel.png}" alt="숙소" />
-            숙소
-        </div>
-        <div class="category-item">
-            <img th:src="@{/images/travel.png}" alt="여행" />
-            여행
-        </div>
+        <a th:href="@{/restaurant/list(category='KOREAN')}" style="text-decoration: none; color: inherit;">
+            <div class="category-item">
+                <img th:src="@{/images/korean.svg}" alt="한식" />
+                한식
+            </div>
+        </a>
+        <a th:href="@{/restaurant/list(category='WESTERN')}" style="text-decoration: none; color: inherit;">
+            <div class="category-item">
+                <img th:src="@{/images/western.svg}" alt="양식" />
+                양식
+            </div>
+        </a>
+        <a th:href="@{/restaurant/list(category='CHINESE')}" style="text-decoration: none; color: inherit;">
+            <div class="category-item">
+                <img th:src="@{/images/chinese.svg}" alt="중식" />
+                중식
+            </div>
+        </a>
+        <a th:href="@{/restaurant/list(category='JAPANESE')}" style="text-decoration: none; color: inherit;">
+            <div class="category-item">
+                <img th:src="@{/images/japanese.svg}" alt="일식" />
+                일식
+            </div>
+        </a>
+        <a th:href="@{/restaurant/list(category='SEAFOOD')}" style="text-decoration: none; color: inherit;">
+            <div class="category-item">
+                <img th:src="@{/images/seafood.svg}" alt="해산물" />
+                해산물
+            </div>
+        </a>
+        <a th:href="@{/restaurant/list(category='BAKERY')}" style="text-decoration: none; color: inherit;">
+            <div class="category-item">
+                <img th:src="@{/images/cafe.svg}" alt="카페/베이커리" />
+                카페/베이커리
+            </div>
+        </a>
+        <a th:href="@{/restaurant/list(category='PUB')}" style="text-decoration: none; color: inherit;">
+            <div class="category-item">
+                <img th:src="@{/images/pub.svg}" alt="주점" />
+                주점
+            </div>
+        </a>
+        <a th:href="@{/restaurant/list(category='ETC')}" style="text-decoration: none; color: inherit;">
+            <div class="category-item">
+                <img th:src="@{/images/etc.svg}" alt="기타" />
+                기타
+            </div>
+        </a>
     </div>
 
     <footer>

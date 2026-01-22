@@ -6,8 +6,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import project.toy.reservation.member.dto.MypageDto;
 import project.toy.reservation.member.dto.SignupRequest;
 import project.toy.reservation.member.service.MemberService;
+
+import java.security.Principal;
 
 @Controller
 @RequiredArgsConstructor
@@ -55,5 +58,12 @@ public class MemberController {
         return "member/login";
     }
 
+    //마이페이지
+    @GetMapping("/member/mypage")
+    public String myPage(Model model, Principal principal) {
+        MypageDto mypageData = memberService.getMypage(principal.getName());
+        model.addAttribute("mypageData", mypageData);
 
+        return "member/mypage";
+    }
 }

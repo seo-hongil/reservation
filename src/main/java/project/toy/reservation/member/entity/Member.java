@@ -24,6 +24,9 @@ public class Member {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private String phone;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoleStatus role;
@@ -40,4 +43,7 @@ public class Member {
         return this.status == MemberStatus.ACTIVE;
     }
 
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }

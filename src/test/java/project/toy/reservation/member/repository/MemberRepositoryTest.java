@@ -27,6 +27,7 @@ public class MemberRepositoryTest {
                 .password("password")
                 .name("홍길동")
                 .role(RoleStatus.USER)
+                .phone("010-1234-5678")
                 .status(MemberStatus.ACTIVE)
                 .createdAt(LocalDateTime.now())
                 .build();
