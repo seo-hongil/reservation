@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>상점 등록 - 예약해홍</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <div th:replace="~{fragments/common :: common-style}"></div>
+
+    <style>
+        body { background: #fff; font-family: 'Noto Sans KR', sans-serif; }
+        .container { max-width: 600px; padding-bottom: 50px; }
+        .form-section { margin-top: 30px; }
+        .section-title { font-weight: 700; font-size: 1.2rem; margin-bottom: 20px; color: #ff4d01; border-bottom: 2px solid #ff4d01; display: inline-block; }
+        .required-label::after { content: " *"; color: #ff4d01; margin-left: 4px; }
+        .field-error { color: #dc3545; font-size: 0.85rem; margin-top: 4px; font-weight: 500; }
+        .is-invalid { border-color: #dc3545 !important; background-image: none !important; }
+
+        /* 추가 옵션 태그 컨테이너 */
+        .tag-container {
+            display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid #dee2e6;
+            padding: 10px; border-radius: 8px; min-height: 45px;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .tag-container:focus-within {
+            border-color: #86b7fe; outline: 0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        .tag { background: #0055ff; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; }
+        .tag i { cursor: pointer; font-size: 0.8rem; }
+        .tag-input { border: none; outline: none; flex-grow: 1; min-width: 100px; background: transparent; }
+
+        /* 이미지 업로드 관련 */
+        .image-upload-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+        .image-preview { position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; border: 1px solid #ddd; overflow: hidden; }
+        .image-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .image-preview .remove-btn { position: absolute; top: 5px; right: 5px; background: rgba(0, 0, 0, 0.5); color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; }
+        .upload-btn-wrapper { width: 100%; aspect-ratio: 1; border: 2px dashed #ccc; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: #888; }
+
+        /* [최종 수정] 시간 입력창 & 버튼 정렬 */
+        .time-input-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        input[type="time"] {
+            cursor: pointer;
+            width: 100%;
+            padding-right: 35px !important; /* 기본 시계 아이콘 공간 */
+        }
+
+        /* 브라우저 기본 시계 아이콘을 컨테이너 기준 우측 끝으로 고정 */
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            margin: 0; padding: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        /* X 버튼이 존재할 때만 입력창 여백을 더 넓게 설정 */
+        .time-input-container:has(.time-clear-btn) input[type="time"] {
+            padding-right: 52px !important;
+        }
+
+        /* X 버튼 스타일 */
+        .time-clear-btn {
+            position: absolute;
+            right: 32px; /* 시계 아이콘 바로 왼쪽 */
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #adb5bd;
+            cursor: pointer;
+            padding: 2px;
+            z-index: 5;
+            font-size: 1rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .time-clear-btn:hover { color: #ff4d01; }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div th:replace="~{fragments/common :: header}"></div>
+
+    <h2 class="fw-bold mb-4">상점 등록</h2>
+
+    <form id="storeForm" th:action="@{/api/store/register}" th:object="${registerRequest}" method="post" enctype="multipart/form-data" novalidate>
+        <div class="form-section">
+            <h5 class="section-title">기본 정보</h5>
+            <div class="mb-3">
+                <label class="form-label fw-bold required-label">상점명</label>
+                <input type="text" th:field="*{name}" class="form-control" th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'" placeholder="상점 이름을 입력하세요" required>
+                <div class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">상점명 오류</div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col">
+                    <label class="form-label fw-bold required-label">대분류</label>
+                    <select id="parentCategory" class="form-select" onchange="loadChildCategories(this.value)" required>
+                        <option value="">선택하세요</option>
+                        <option th:each="cat : ${parentCategories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label class="form-label fw-bold required-label">소분류</label>
+                    <select id="childCategory" th:field="*{categoryId}" class="form-select" th:classappend="${#fields.hasErrors('categoryId')} ? 'is-invalid'" required>
+                        <option value="">대분류 먼저 선택</option>
+                    </select>
+                    <div class="field-error" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}">카테고리 선택 오류</div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">가게 번호</label>
+                <input type="tel" th:field="*{phone}" id="phone" class="form-control" placeholder="02-123-4567" maxlength="13" oninput="autoHyphen(this)">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold required-label">주소</label>
+                <div class="position-relative" onclick="execDaumPostcode()" style="cursor: pointer;">
+                    <input type="text" th:field="*{address}" id="address" class="form-control pe-5" th:classappend="${#fields.hasErrors('address')} ? 'is-invalid'" placeholder="주소를 검색하려면 터치하세요" readonly required>
+                    <i class="fa-solid fa-magnifying-glass position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+                </div>
+                <input type="text" th:field="*{addressDetail}" id="addressDetail" class="form-control mt-2" placeholder="상세 주소를 입력하세요 (층, 호수 등)">
+                <div class="field-error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}">주소 오류</div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h5 class="section-title">가게 사진 (최대 10장)</h5>
+            <div class="image-upload-container" id="imageContainer">
+                <label class="upload-btn-wrapper" for="imageInput">
+                    <i class="fa-solid fa-camera fa-2x mb-1"></i>
+                    <span style="font-size: 0.8rem;">사진 추가</span>
+                    <input type="file" id="imageInput" name="imageUrls" accept="image/*" multiple style="display: none;">
+                </label>
+            </div>
+            <p class="text-muted mt-2" style="font-size: 0.8rem;">* 첫 번째 사진이 메인 썸네일로 사용됩니다.(미등록 시 기본 이미지 적용)</p>
+        </div>
+
+        <div class="form-section">
+            <h5 class="section-title">영업 설정</h5>
+            <div class="row mb-3">
+                <div class="col">
+                    <label class="small fw-bold required-label">오픈 시간</label>
+                    <div class="time-input-container">
+                        <input type="time" th:field="*{openTime}" class="form-control time-input" required>
+                    </div>
+                </div>
+                <div class="col">
+                    <label class="small fw-bold required-label">마감 시간</label>
+                    <div class="time-input-container">
+                        <input type="time" th:field="*{closeTime}" class="form-control time-input" required>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-1">
+                <div class="col">
+                    <label class="small fw-bold">브레이크 시작</label>
+                    <div class="time-input-container">
+                        <input type="time" th:field="*{breakStartTime}" id="breakStartTime" class="form-control time-input">
+                        <button type="button" class="time-clear-btn" onclick="clearTimeInput('breakStartTime')">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col">
+                    <label class="small fw-bold">브레이크 종료</label>
+                    <div class="time-input-container">
+                        <input type="time" th:field="*{breakEndTime}" id="breakEndTime" class="form-control time-input">
+                        <button type="button" class="time-clear-btn" onclick="clearTimeInput('breakEndTime')">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">라스트 오더</label>
+                <div class="time-input-container">
+                    <input type="time" th:field="*{lastOrderTime}" id="lastOrderTime" class="form-control time-input">
+                    <button type="button" class="time-clear-btn" onclick="clearTimeInput('lastOrderTime')">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">휴무일</label>
+                <input type="text" th:field="*{dayOff}" class="form-control" placeholder="예: 매주 월요일, 연중무휴">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">가게 설명</label>
+                <textarea th:field="*{description}" class="form-control" rows="3" placeholder="가게를 소개하는 글을 적어주세요"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">공지사항</label>
+                <textarea th:field="*{notice}" class="form-control" rows="2" placeholder="손님들에게 알릴 공지사항"></textarea>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h5 class="section-title required-label">접수 방식</h5>
+            <div class="card p-3 bg-light border-0" th:classappend="${#fields.hasErrors('reservationTypes')} ? 'border border-danger'">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="resGroup" id="groupWait" checked onclick="toggleResType('WAIT')">
+                    <label class="form-check-label fw-bold" for="groupWait" style="cursor:pointer;">줄서기 모드 (원격/현장)</label>
+                </div>
+
+                <div id="waitOptions" class="ps-4 mb-3">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input wait-check" type="checkbox" th:field="*{reservationTypes}" th:value="REMOTE" id="typeRemote">
+                        <label class="form-check-label" for="typeRemote">원격 줄서기</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input wait-check" type="checkbox" th:field="*{reservationTypes}" th:value="FIELD" id="typeField">
+                        <label class="form-check-label" for="typeField">현장 접수</label>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="resGroup" id="groupBooking" onclick="toggleResType('BOOKING')">
+                    <label class="form-check-label fw-bold" for="groupBooking" style="cursor:pointer;">사전 예약 전용</label>
+                    <input type="checkbox" th:field="*{reservationTypes}" th:value="BOOKING" id="typeBooking" style="display:none;">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h5 class="section-title">추가 옵션</h5>
+            <div id="tagList" class="d-flex flex-wrap gap-2 mb-2"></div>
+            <div class="tag-container">
+                <input type="text" id="optionInput" class="tag-input" placeholder="키워드 입력 후 엔터">
+            </div>
+            <input type="hidden" th:field="*{options}" id="hiddenOptions">
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-3 mt-5 mb-5" style="background-color: #ff4d01; border: none; font-weight: 700;">상점 등록 완료</button>
+    </form>
+
+    <div th:replace="~{fragments/common :: footer}"></div>
+</div>
+
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+    // 시간 입력창 관련
+    document.querySelectorAll('.time-input').forEach(input => {
+        input.addEventListener('click', function() {
+            this.showPicker(); // 클릭 시 시간 선택창 호출
+        });
+    });
+
+    // 카테고리 로드
+    async function loadChildCategories(parentId) {
+        const childSelect = document.getElementById('childCategory');
+        childSelect.innerHTML = '<option value="">로딩 중...</option>';
+        if (!parentId) {
+            childSelect.innerHTML = '<option value="">대분류 먼저 선택</option>';
+            return;
+        }
+        try {
+            const response = await fetch(`/api/store/category/children?parentId=${parentId}`);
+            const data = await response.json();
+            childSelect.innerHTML = data.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        } catch (e) {
+            childSelect.innerHTML = '<option value="">불러오기 실패</option>';
+        }
+    }
+
+    // 태그(옵션) 관련
+    const tags = new Set();
+    const tagInput = document.getElementById('optionInput');
+    const tagList = document.getElementById('tagList');
+    const hiddenOptions = document.getElementById('hiddenOptions');
+
+    tagInput.addEventListener('keydown', (e) => {
+        if (e.isComposing || e.keyCode === 229) return;
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const value = tagInput.value.trim();
+            if (value && !tags.has(value)) {
+                tags.add(value);
+                renderTags();
+                tagInput.value = '';
+            }
+        }
+    });
+
+    function renderTags() {
+        tagList.innerHTML = Array.from(tags).map(tag => `
+                <div class="tag">${tag}<i class="fa-solid fa-xmark" onclick="removeTag('${tag}')"></i></div>
+            `).join('');
+        hiddenOptions.value = Array.from(tags).join(',');
+    }
+
+    function removeTag(tag) {
+        tags.delete(tag);
+        renderTags();
+    }
+
+    // 이미지 업로드 로직 (기존 유지)
+    const imageInput = document.getElementById('imageInput');
+    const imageContainer = document.getElementById('imageContainer');
+    let selectedFiles = [];
+    const MAX_SIZE_MB = 10;
+
+    imageInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        if (selectedFiles.length + files.length > 10) {
+            alert("최대 10장까지 가능합니다.");
+            imageInput.value = "";
+            return;
+        }
+        for (let file of files) {
+            if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+                alert(`파일 "${file.name}"의 용량이 너무 큽니다. (최대 ${MAX_SIZE_MB}MB)`);
+                imageInput.value = "";
+                return;
+            }
+        }
+        files.forEach(file => {
+            selectedFiles.push(file);
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const div = document.createElement('div');
+                div.className = 'image-preview';
+                div.innerHTML = `
+                        <img src="${event.target.result}">
+                        <button type="button" class="remove-btn" onclick="removeImage(this, '${file.name}')">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>`;
+                imageContainer.insertBefore(div, imageInput.parentElement);
+            };
+            reader.readAsDataURL(file);
+        });
+        updateInputFiles();
+    });
+
+    function removeImage(button, fileName) {
+        button.parentElement.remove();
+        selectedFiles = selectedFiles.filter(file => file.name !== fileName);
+        updateInputFiles();
+    }
+
+    function updateInputFiles() {
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        imageInput.files = dt.files;
+    }
+
+    // 접수 방식 토글 로직 (기존 유지)
+    function toggleResType(group) {
+        const waitChecks = document.querySelectorAll('.wait-check');
+        const bookingCheck = document.getElementById('typeBooking');
+        const waitOptionsDiv = document.getElementById('waitOptions');
+
+        if (group === 'BOOKING') {
+            waitChecks.forEach(c => { c.checked = false; c.disabled = true; });
+            waitOptionsDiv.style.opacity = '0.5';
+            waitOptionsDiv.style.pointerEvents = 'none';
+            bookingCheck.disabled = false;
+            bookingCheck.checked = true;
+        } else {
+            waitChecks.forEach(c => { c.disabled = false; });
+            waitOptionsDiv.style.opacity = '1';
+            waitOptionsDiv.style.pointerEvents = 'auto';
+            bookingCheck.checked = false;
+            bookingCheck.disabled = true;
+            if (!Array.from(waitChecks).some(c => c.checked)) {
+                document.getElementById('typeRemote').checked = true;
+            }
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', (event) => {
+        if (document.getElementById('groupBooking').checked) {
+            toggleResType('BOOKING');
+        } else {
+            toggleResType('WAIT');
+        }
+    });
+
+    // DAUM 주소 서비스
+    function execDaumPostcode() {
+        new daum.Postcode({
+            oncomplete: function(data) {
+                let addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
+                document.getElementById("address").value = addr;
+                document.getElementById("addressDetail").focus();
+                document.getElementById("address").classList.remove('is-invalid');
+            }
+        }).open();
+    }
+
+    // 하이픈 자동 생성
+    const autoHyphen = (target) => {
+        target.value = target.value
+            .replace(/[^0-9]/g, '')
+            .replace(/^(\d{2,3})(\d{3,4})(\d{4})$/, `$1-$2-$3`)
+            .replace(/--/g, '-');
+    }
+
+    // 폼 제출 비동기 처리
+    let isSubmitting = false;
+    document.getElementById('storeForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (isSubmitting) return;
+
+        if (!this.checkValidity()) {
+            this.classList.add('was-validated');
+            alert("필수 항목(*)을 모두 입력해주세요.");
+            return;
+        }
+
+        isSubmitting = true;
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerText;
+        submitBtn.disabled = true;
+        submitBtn.innerText = "등록 중...";
+
+        try {
+            const formData = new FormData(this);
+            const rawPhone = formData.get('phone').replace(/-/g, '');
+            formData.set('phone', rawPhone);
+
+            const response = await fetch(this.action, { method: 'POST', body: formData });
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                alert("상점 등록이 완료되었습니다!");
+                location.href = "/member/mypage";
+            } else {
+                alert("등록 실패: " + (result.message || "알 수 없는 오류가 발생했습니다."));
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("서버 통신 중 오류가 발생했습니다.");
+        } finally {
+            isSubmitting = false;
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalBtnText;
+        }
+    });
+
+    // 시간 입력창 초기화 함수
+    function clearTimeInput(id) {
+        const input = document.getElementById(id);
+        if (input) {
+            input.value = ''; // 값을 비움
+        }
+    }
+</script>
+</body>
+</html>

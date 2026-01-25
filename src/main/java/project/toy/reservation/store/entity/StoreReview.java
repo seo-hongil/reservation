@@ -1,4 +1,4 @@
-package project.toy.reservation.reservation.entity;
+package project.toy.reservation.store.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,6 +8,8 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import project.toy.reservation.member.entity.Member;
+import project.toy.reservation.reservation.entity.ReservationOrder;
+import project.toy.reservation.reservation.entity.Waiting;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

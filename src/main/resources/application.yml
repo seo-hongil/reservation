@@ -22,6 +22,11 @@ spring:
     cache: false
     encoding: UTF-8
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+
 security:
   remember-me:
     key: "f2e9b7d0-8a34-4c5f-9d1b-2e7f9c6a1234"
@@ -30,7 +35,12 @@ server:
   servlet:
     session:
       timeout: 60m
+
 logging:
   level:
     org.hibernate.SQL: debug
+
+
+file:
+  uploadPath: "/Users/seohong-il/Desktop/study/file"
 

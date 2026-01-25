@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import project.toy.reservation.member.entity.Member;
 import project.toy.reservation.reservation.entity.ReservationOrder;
-import project.toy.reservation.reservation.entity.Store;
+import project.toy.reservation.store.entity.Store;
 import project.toy.reservation.reservation.entity.Waiting;
 
 import java.time.LocalDate;

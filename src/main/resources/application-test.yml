@@ -13,3 +13,6 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
         hbm2ddl:
           auto: update
+
+file:
+  uploadPath: "/Users/seohong-il/Desktop/study/file/test"

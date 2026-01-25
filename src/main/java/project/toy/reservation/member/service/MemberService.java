@@ -12,13 +12,14 @@ import project.toy.reservation.member.entity.MemberStatus;
 import project.toy.reservation.member.entity.RoleStatus;
 import project.toy.reservation.member.repository.MemberRepository;
 import project.toy.reservation.reservation.entity.*;
+import project.toy.reservation.store.entity.Store;
 
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import static project.toy.reservation.reservation.entity.QReservationOrder.reservationOrder;
-import static project.toy.reservation.reservation.entity.QStore.store;
 import static project.toy.reservation.reservation.entity.QWaiting.waiting;
+import static project.toy.reservation.store.entity.QStore.store;
 
 
 @Service

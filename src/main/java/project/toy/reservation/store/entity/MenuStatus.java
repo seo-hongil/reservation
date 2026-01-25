@@ -1,4 +1,4 @@
-package project.toy.reservation.reservation.entity;
+package project.toy.reservation.store.entity;
 
 public enum MenuStatus {
     AVAILABLE, SOLD_OUT, HIDDEN

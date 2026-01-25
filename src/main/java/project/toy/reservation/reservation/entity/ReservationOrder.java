@@ -6,6 +6,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import project.toy.reservation.member.entity.Member;
+import project.toy.reservation.store.entity.Store;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

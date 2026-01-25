@@ -1,4 +1,4 @@
-package project.toy.reservation.reservation.entity;
+package project.toy.reservation.store.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,6 +7,7 @@ import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import project.toy.reservation.member.entity.Member;
+import project.toy.reservation.store.dto.StoreRequest.ModifyRequest;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -46,6 +47,9 @@ public class Store {
     @Column(nullable = false)
     private String address;
 
+    @Column(nullable = false)
+    private String addressDetail;
+
     private String phone;
 
     @Column(name = "open_time", nullable = false)
@@ -75,9 +79,9 @@ public class Store {
     @Column(name = "store_url")
     private String storeUrl;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "reservation_type", nullable = false, length = 50)
-    private ReservationType reservationType; // REMOTE, FIELD, BOOKING
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "reservation_type", nullable = false)
+    private List<ReservationType>  reservationType;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "json")
@@ -86,4 +90,40 @@ public class Store {
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    public void updateThumbnailFromImages(String imageUrls) {
+            this.thumbnailUrl = imageUrls;
+    }
+
+    public void addImages(List<String> images){
+        this.imageUrls = images;
+    }
+
+    public void updateImages(List<String> images) {
+        this.imageUrls = images;
+
+        if (images != null && !images.isEmpty()) {
+            this.thumbnailUrl = images.get(0);
+        } else {
+            this.thumbnailUrl = "noImage";
+        }
+    }
+
+    public void modifyRequestDetails(ModifyRequest dto, Category category) {
+        this.category = category;
+        this.name = dto.getName();
+        this.address = dto.getAddress();
+        this.addressDetail = dto.getAddressDetail();
+        this.phone = dto.getPhone();
+        this.openTime = dto.getOpenTime();
+        this.closeTime = dto.getCloseTime();
+        this.breakStartTime = dto.getBreakStartTime();
+        this.breakEndTime = dto.getBreakEndTime();
+        this.lastOrderTime = dto.getLastOrderTime();
+        this.dayOff = dto.getDayOff();
+        this.description = dto.getDescription();
+        this.notice = dto.getNotice();
+        this.reservationType = dto.getReservationTypes();
+        this.options = dto.getOptions();
+    }
 }

@@ -7,6 +7,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
+    <div th:replace="~{fragments/common :: common-style}"></div>
+
     <style>
         /* 메인 디자인 유지 */
         body {
@@ -26,19 +28,6 @@
             flex-direction: column;
         }
 
-        nav.navbar {
-            background-color: #fff;
-            border-bottom: 1px solid #eee;
-            padding: 0.8rem 0;
-        }
-
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.6rem;
-            color: #ff4d01;
-            text-decoration: none;
-        }
-
         /* 마이페이지 전용 스타일 */
         .page-header {
             margin: 25px 0;
@@ -49,13 +38,13 @@
         /* 탭 스타일 조정 */
         .nav-tabs {
             border-bottom: 2px solid #eee;
-            display: flex; /* flex 적용 */
-            justify-content: space-between; /* 양 끝으로 벌림 */
-            gap: 20px; /* 탭 사이 물리적 간격 추가 */
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
         }
 
         .nav-tabs .nav-item {
-            flex: 1; /* 탭이 동일한 너비를 갖게 함 */
+            flex: 1;
         }
 
         .nav-tabs .nav-link {
@@ -63,10 +52,10 @@
             color: #888;
             font-weight: 600;
             padding: 12px 0;
-            width: 100%; /* 너비 꽉 채우기 */
+            width: 100%;
             text-align: center;
             font-size: 1rem;
-            white-space: nowrap; /* 글자 줄바꿈 방지 */
+            white-space: nowrap;
         }
 
         /* 선택된 탭 스타일 */
@@ -80,22 +69,31 @@
             padding: 25px 0;
         }
 
+        /* 카드 디자인 */
         .info-card {
-            border: 1px solid #eee;
+            border: 1px solid #f1f1f1;
             border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            background: #fff;
+            padding: 16px;
+            margin-bottom: 12px;
+            background-color: #fff;
+            transition: transform 0.2s;
         }
 
+        /* 배지 스타일 */
         .badge-wait {
             background-color: #ff4d01;
-            color: #fff;
+            color: white;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
         }
 
         .badge-res {
             background-color: #0055ff;
-            color: #fff;
+            color: white;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
         }
 
         /* 내 정보 간단 요약 */
@@ -113,162 +111,11 @@
             font-size: 2.5rem;
             color: #ddd;
         }
-
-        footer {
-            margin-top: auto;
-            font-size: 0.8rem;
-            color: #777;
-            text-align: center;
-            padding: 16px 0 24px 0;
-        }
-
-        /* 카드 디자인 */
-        .info-card {
-            border: 1px solid #f1f1f1;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            background-color: #fff;
-            transition: transform 0.2s;
-        }
-
-        /* 웨이팅 배지 (주황색 계열) */
-        .badge-wait {
-            background-color: #ff4d01;
-            color: white;
-            font-size: 0.75rem;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-
-        /* 예약 배지 (파란색 계열) */
-        .badge-res {
-            background-color: #0055ff;
-            color: white;
-            font-size: 0.75rem;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
     </style>
 </head>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    let checkModal;
-    let changeModal;
-
-    document.addEventListener('DOMContentLoaded', () => {
-        checkModal = new bootstrap.Modal(document.getElementById('checkPasswordModal'));
-        changeModal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
-
-        // 엔터 키
-        const currentPwInput = document.getElementById('currentPassword');
-        currentPwInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handlePasswordCheck();
-            }
-        });
-
-        const confirmPwInput = document.getElementById('confirmPassword');
-        confirmPwInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handlePasswordChange();
-            }
-        });
-
-        // 모달 닫힐 때 배경 락 강제 해제
-        const allModals = document.querySelectorAll('.modal');
-        allModals.forEach(modalEl => {
-            modalEl.addEventListener('hidden.bs.modal', () => {
-                const backdrops = document.querySelectorAll('.modal-backdrop');
-                backdrops.forEach(el => el.remove());
-
-                document.body.classList.remove('modal-open');
-                document.body.style.overflow = '';
-                document.body.style.paddingRight = '';
-            });
-        });
-
-        // 모달이 뜰 때 첫 번째 입력창에 포커스
-        document.getElementById('checkPasswordModal').addEventListener('shown.bs.modal', () => {
-            currentPwInput.focus();
-        });
-        document.getElementById('changePasswordModal').addEventListener('shown.bs.modal', () => {
-            document.getElementById('newPassword').focus();
-        });
-    });
-
-    // 비밀번호 확인 로직
-    async function handlePasswordCheck() {
-        const password = document.getElementById('currentPassword').value;
-
-        const response = await fetch('/api/member/verify-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password })
-        });
-
-        if (response.ok) {
-            const checkModalEl = document.getElementById('checkPasswordModal');
-            const openNext = () => {
-                changeModal.show();
-                checkModalEl.removeEventListener('hidden.bs.modal', openNext);
-            };
-            checkModalEl.addEventListener('hidden.bs.modal', openNext);
-
-            checkModal.hide();
-        } else {
-            alert("비밀번호가 올바르지 않습니다.");
-        }
-    }
-
-    // 새 비밀번호 변경 로직
-    async function handlePasswordChange() {
-        const newPw = document.getElementById('newPassword').value;
-        const confirmPw = document.getElementById('confirmPassword').value;
-        const errorDiv = document.getElementById('pwMatchError');
-
-        if (newPw !== confirmPw) {
-            errorDiv.style.display = 'block';
-            return;
-        }
-
-        const response = await fetch('/api/member/change-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ newPassword: newPw })
-        });
-
-        if (response.ok) {
-            alert("비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.");
-            const logoutForm = document.createElement('form');
-            logoutForm.method = 'POST';
-            logoutForm.action = '/member/logout';
-            document.body.appendChild(logoutForm);
-            logoutForm.submit();
-        } else {
-            alert("변경 중 오류가 발생했습니다.");
-        }
-    }
-</script>
 <body>
 <div class="container">
-    <nav class="navbar">
-        <a class="navbar-brand" th:href="@{/}">예약해홍</a>
-        <ul class="navbar-nav d-flex flex-row ms-auto align-items-center">
-            <li class="nav-item">
-                <a class="nav-link fw-bold text-primary" th:href="@{/member/mypage}">마이페이지</a>
-            </li>
-            <li class="nav-item">
-                <form th:action="@{/member/logout}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-link nav-link"
-                            style="padding: 0 10px; border: none; cursor: pointer;">로그아웃
-                    </button>
-                </form>
-            </li>
-        </ul>
-    </nav>
+    <div th:replace="~{fragments/common :: header}"></div>
 
     <h2 class="page-header">마이페이지</h2>
 
@@ -355,7 +202,7 @@
                         <h6 class="fw-bold mb-0" th:text="${s.name}">상점 이름</h6>
                         <small class="text-muted">상점 ID: <span th:text="${s.id}">1</span></small>
                     </div>
-                    <a th:href="@{/store/manage/{id}(id=${s.id})}" class="btn btn-sm btn-dark">관리</a>
+                    <a th:href="@{/store/manage(storeId=${s.id})}" class="btn btn-sm btn-dark">관리</a>
                 </div>
             </div>
 
@@ -363,9 +210,11 @@
                 <p class="text-muted small">등록된 상점이 없습니다.</p>
             </div>
 
-            <button class="btn btn-primary w-100 py-3 mb-3" style="background-color: #0055ff; border: none;">새로운 상점
-                등록하기
-            </button>
+            <a th:href="@{/store/register}"
+               class="btn btn-primary w-100 py-3 mb-3"
+               style="background-color: #0055ff; border: none; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                새로운 상점 등록하기
+            </a>
         </div>
 
         <div class="tab-pane fade" id="edit-content" role="tabpanel">
@@ -388,56 +237,142 @@
                 </button>
             </div>
         </div>
+    </div>
 
-        <div class="modal fade" id="checkPasswordModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow">
-                    <div class="modal-header border-0 pb-0">
-                        <h5 class="fw-bold">비밀번호 확인</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body py-4">
-                        <p class="text-muted small">보안을 위해 현재 비밀번호를 입력해주세요.</p>
-                        <input type="password" id="currentPassword" class="form-control" placeholder="현재 비밀번호">
-                    </div>
-                    <div class="modal-footer border-0 pt-0">
-                        <button type="button" class="btn btn-primary w-100 py-2" onclick="handlePasswordCheck()" style="background-color: #ff4d01; border: none;">확인</button>
-                    </div>
+    <div class="modal fade" id="checkPasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold">비밀번호 확인</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow">
-                    <div class="modal-header border-0 pb-0">
-                        <h5 class="fw-bold">새 비밀번호 설정</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body py-4">
-                        <div class="mb-3">
-                            <label class="small fw-bold">새 비밀번호</label>
-                            <input type="password" id="newPassword" class="form-control" placeholder="새 비밀번호 입력">
-                        </div>
-                        <div>
-                            <label class="small fw-bold">새 비밀번호 확인</label>
-                            <input type="password" id="confirmPassword" class="form-control" placeholder="비밀번호 재입력">
-                            <div id="pwMatchError" class="text-danger small mt-1" style="display:none;">비밀번호가 일치하지 않습니다.</div>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-0 pt-0">
-                        <button type="button" class="btn btn-primary w-100 py-2" onclick="handlePasswordChange()" style="background-color: #ff4d01; border: none;">변경 완료</button>
-                    </div>
+                <div class="modal-body py-4">
+                    <p class="text-muted small">보안을 위해 현재 비밀번호를 입력해주세요.</p>
+                    <input type="password" id="currentPassword" class="form-control" placeholder="현재 비밀번호">
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-primary w-100 py-2" onclick="handlePasswordCheck()" style="background-color: #ff4d01; border: none;">확인</button>
                 </div>
             </div>
         </div>
     </div>
-    <footer>
-        예약해홍 &copy; 2026. All Rights Reserved.<br/>
-        회사명 | 개인정보처리방침 | 이용약관
-    </footer>
+
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold">새 비밀번호 설정</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <div class="mb-3">
+                        <label class="small fw-bold">새 비밀번호</label>
+                        <input type="password" id="newPassword" class="form-control" placeholder="새 비밀번호 입력">
+                    </div>
+                    <div>
+                        <label class="small fw-bold">새 비밀번호 확인</label>
+                        <input type="password" id="confirmPassword" class="form-control" placeholder="비밀번호 재입력">
+                        <div id="pwMatchError" class="text-danger small mt-1" style="display:none;">비밀번호가 일치하지 않습니다.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-primary w-100 py-2" onclick="handlePasswordChange()" style="background-color: #ff4d01; border: none;">변경 완료</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/common :: footer}"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let checkModal;
+    let changeModal;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        checkModal = new bootstrap.Modal(document.getElementById('checkPasswordModal'));
+        changeModal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+
+        const currentPwInput = document.getElementById('currentPassword');
+        currentPwInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handlePasswordCheck();
+            }
+        });
+
+        const confirmPwInput = document.getElementById('confirmPassword');
+        confirmPwInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handlePasswordChange();
+            }
+        });
+
+        const allModals = document.querySelectorAll('.modal');
+        allModals.forEach(modalEl => {
+            modalEl.addEventListener('hidden.bs.modal', () => {
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            });
+        });
+
+        document.getElementById('checkPasswordModal').addEventListener('shown.bs.modal', () => {
+            currentPwInput.focus();
+        });
+        document.getElementById('changePasswordModal').addEventListener('shown.bs.modal', () => {
+            document.getElementById('newPassword').focus();
+        });
+    });
+
+    async function handlePasswordCheck() {
+        const password = document.getElementById('currentPassword').value;
+        const response = await fetch('/api/member/verify-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+        });
+        if (response.ok) {
+            const checkModalEl = document.getElementById('checkPasswordModal');
+            const openNext = () => {
+                changeModal.show();
+                checkModalEl.removeEventListener('hidden.bs.modal', openNext);
+            };
+            checkModalEl.addEventListener('hidden.bs.modal', openNext);
+            checkModal.hide();
+        } else {
+            alert("비밀번호가 올바르지 않습니다.");
+        }
+    }
+
+    async function handlePasswordChange() {
+        const newPw = document.getElementById('newPassword').value;
+        const confirmPw = document.getElementById('confirmPassword').value;
+        const errorDiv = document.getElementById('pwMatchError');
+        if (newPw !== confirmPw) {
+            errorDiv.style.display = 'block';
+            return;
+        }
+        const response = await fetch('/api/member/change-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newPassword: newPw })
+        });
+        if (response.ok) {
+            alert("비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.");
+            const logoutForm = document.createElement('form');
+            logoutForm.method = 'POST';
+            logoutForm.action = '/member/logout';
+            document.body.appendChild(logoutForm);
+            logoutForm.submit();
+        } else {
+            alert("변경 중 오류가 발생했습니다.");
+        }
+    }
+</script>
 </body>
 </html>

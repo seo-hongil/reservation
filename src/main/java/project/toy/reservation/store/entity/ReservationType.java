@@ -1,4 +1,4 @@
-package project.toy.reservation.reservation.entity;
+package project.toy.reservation.store.entity;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

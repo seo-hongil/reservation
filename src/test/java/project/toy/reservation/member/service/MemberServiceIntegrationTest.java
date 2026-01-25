@@ -12,15 +12,17 @@ import project.toy.reservation.member.entity.Member;
 import project.toy.reservation.member.entity.MemberStatus;
 import project.toy.reservation.member.entity.RoleStatus;
 import project.toy.reservation.member.repository.MemberRepository;
-import project.toy.reservation.reservation.entity.Category;
-import project.toy.reservation.reservation.entity.ReservationType;
-import project.toy.reservation.reservation.entity.Store;
+import project.toy.reservation.store.entity.Category;
+import project.toy.reservation.store.entity.ReservationType;
+import project.toy.reservation.store.entity.Store;
 import project.toy.reservation.reservation.entity.Waiting;
-import project.toy.reservation.reservation.repository.CategoryRepository;
-import project.toy.reservation.reservation.repository.StoreRepository;
+import project.toy.reservation.store.repository.CategoryRepository;
+import project.toy.reservation.store.repository.StoreRepository;
 import project.toy.reservation.reservation.repository.WaitingRepository;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -69,9 +71,10 @@ public class MemberServiceIntegrationTest {
                 .owner(testMember)
                 .category(category)
                 .address("서울시 강남구")
+                .addressDetail("1층")
                 .openTime(LocalTime.now())
                 .closeTime(LocalTime.MAX)
-                .reservationType(ReservationType.REMOTE)
+                .reservationType(new ArrayList<>(List.of(ReservationType.REMOTE, ReservationType.FIELD)))
                 .build();
         storeRepository.save(store);
 
