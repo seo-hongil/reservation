@@ -103,6 +103,14 @@ public class StoreRequest {
         private List<String> keepImages;
     }
 
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    public static class SearchCond {
+        private Long categoryId;
+        private String keyword;
+    }
+
     public static Store toNewStoreEntity(Register dto, Member member, Category category) {
         return Store.builder()
                 .owner(member)
@@ -121,24 +129,6 @@ public class StoreRequest {
                 .notice(dto.getNotice())
                 .options(dto.getOptions())
                 .reservationType(dto.getReservationTypes())
-                .build();
-    }
-
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class CategoryDto {
-        private Long id;
-        private String name;
-        private Long parentId;
-    }
-
-    public static CategoryDto toCategoryDto(Category c) {
-        return CategoryDto.builder()
-                .id(c.getId())
-                .name(c.getName())
-                .parentId(c.getParent() != null ? c.getParent().getId() : null)
                 .build();
     }
 

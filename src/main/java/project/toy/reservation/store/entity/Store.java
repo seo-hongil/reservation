@@ -105,7 +105,7 @@ public class Store {
         if (images != null && !images.isEmpty()) {
             this.thumbnailUrl = images.get(0);
         } else {
-            this.thumbnailUrl = "noImage";
+            this.thumbnailUrl = "NOIMAGE";
         }
     }
 

@@ -4,18 +4,18 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import project.toy.reservation.common.file.FileService;
 import project.toy.reservation.global.exception.BusinessException;
 import project.toy.reservation.global.exception.ErrorCode;
 import project.toy.reservation.member.entity.Member;
 import project.toy.reservation.member.repository.MemberRepository;
+import project.toy.reservation.store.dto.CategoryDto;
 import project.toy.reservation.store.dto.StoreRequest;
-import project.toy.reservation.store.dto.StoreRequest.CategoryDto;
 import project.toy.reservation.store.dto.StoreRequest.ModifyRequest;
 import project.toy.reservation.store.dto.StoreRequest.Register;
 import project.toy.reservation.store.dto.StoreResponse;
+import project.toy.reservation.store.dto.StoreResponse.StoreList;
 import project.toy.reservation.store.entity.Category;
 import project.toy.reservation.store.entity.Store;
 import project.toy.reservation.store.repository.CategoryRepository;
@@ -27,58 +27,68 @@ import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
-public class StoreService implements StoreProvider {
+public class StoreService {
 
     private final StoreRepository storeRepository;
     private final MemberRepository memberRepository;
     private final CategoryRepository categoryRepository;
     private final FileService fileService;
 
-    @Override
-    public StoreResponse getStores(String category, String keyword) {
+    @Transactional(readOnly = true)
+    public StoreList getStores(StoreRequest.SearchCond cond) {
+        List<CategoryDto> childrenCateList = new ArrayList<>();
 
-        if(StringUtils.hasText(category)){
-            // 카테고리만 넣어서 검색
+        if (cond.getCategoryId() != null) {
+            Category category = categoryRepository.findById(cond.getCategoryId()).orElseThrow(() -> new NoSuchElementException("카테고리가 존재하지 않습니다."));
+            Long parentId = (category.getParent() != null) ? category.getParent().getId() : category.getId();
+            childrenCateList = categoryRepository.findAllByParentId(parentId).stream().map(CategoryDto::toCategoryDto).toList();
+        }else{
+            Category parentCategory = categoryRepository.findByName("식당").orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
+            childrenCateList = categoryRepository.findAllByParentId(parentCategory.getId()).stream().map(CategoryDto::toCategoryDto).toList();
         }
 
-        if(StringUtils.hasText(keyword)){
-            // 식당이름, 주소, 카테고리
-        }
+        List<StoreResponse.StoreInfo> storeInfos = storeRepository.searchStores(cond.getCategoryId(), cond.getKeyword()).stream().map(StoreResponse::toStoreInfoDto).toList();
 
-        return null;
+        return StoreList.builder()
+                .stores(storeInfos)
+                .categories(childrenCateList)
+                .selectedCategoryId(cond.getCategoryId())
+                .keyword(cond.getKeyword())
+                .build();
     }
 
-    public List<CategoryDto> getCategoryInfo() {
-        List<Category> categories = categoryRepository.findAllByParentIsNullAndDepth(1L);
+    @Transactional(readOnly = true)
+    public List<CategoryDto> getCategoryParent() {
+        List<Category> categories = categoryRepository.findAllByDepth(1);
 
-        if(categories.isEmpty()){
+        if (categories.isEmpty()) {
             throw new EntityNotFoundException("대분류 카테고리가 등록되어 있지 않습니다.");
         }
 
-        return categories.stream().map(StoreRequest::toCategoryDto).toList();
+        return categories.stream().map(CategoryDto::toCategoryDto).toList();
     }
 
     @Transactional
-    public Long postRegisterStore(Register dto, List<MultipartFile> images, String email){
-        Member member = memberRepository.findByEmail(email).orElseThrow(()->new NoSuchElementException("사용자를 찾을 수 없습니다."));
+    public Long postRegisterStore(Register dto, List<MultipartFile> images, String email) {
+        Member member = memberRepository.findByEmail(email).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
         Category category = categoryRepository.findById(dto.getCategoryId()).orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
         Store store = StoreRequest.toNewStoreEntity(dto, member, category);
         Store saveStore = storeRepository.save(store);
 
         if (images != null && !images.isEmpty() && !images.get(0).isEmpty()) {
-            List<String> uploadImages = fileService.uploadFiles(images, "store",saveStore.getId());
+            List<String> uploadImages = fileService.uploadFiles(images, "store", saveStore.getId());
 
             saveStore.updateThumbnailFromImages(uploadImages.get(0));
             saveStore.addImages(uploadImages);
-        }else{
+        } else {
             saveStore.updateThumbnailFromImages("noImage");
         }
         return saveStore.getId();
     }
 
     @Transactional
-    public Long modifyStore(ModifyRequest dto, List<MultipartFile> images){
+    public Long modifyStore(ModifyRequest dto, List<MultipartFile> images) {
         Category category = categoryRepository.findById(dto.getChildCateId()).orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
         Store store = storeRepository.findById(dto.getId()).orElseThrow(() -> new NoSuchElementException("상점을 찾을 수 없습니다."));
         List<String> oldImages = new ArrayList<>(store.getImageUrls());
@@ -100,12 +110,14 @@ public class StoreService implements StoreProvider {
         return store.getId();
     }
 
-    public List<CategoryDto> getCategory(Long parentId){
-        List<Category> categories = categoryRepository.findAllByParent_IdAndDepth(parentId, 2);
-        return categories.stream().map(StoreRequest::toCategoryDto).toList();
+    @Transactional(readOnly = true)
+    public List<CategoryDto> getCategoryChildren(Long parentId) {
+        List<Category> categories = categoryRepository.findAllByParentId(parentId);
+        return categories.stream().map(CategoryDto::toCategoryDto).toList();
     }
 
-    public ModifyRequest getStoreInfo(Long storeId){
+    @Transactional(readOnly = true)
+    public ModifyRequest getStoreInfo(Long storeId) {
         Store store = storeRepository.findById(storeId).orElseThrow(() -> new NoSuchElementException("상점이 존재하지 않습니다."));
         return StoreRequest.toModifyDto(store);
     }

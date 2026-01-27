@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>예약해홍 - 상점 리스트</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+    <style>
+        body {
+            background: #fff;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+            color: #212529;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 16px;
+            min-height: 100vh;
+        }
+
+        /* 검색창 스타일 */
+        .search-container {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 100;
+            padding: 15px 0 10px;
+        }
+
+        .search-form {
+            display: flex;
+            align-items: center;
+            background: #f4f4f4;
+            border-radius: 10px;
+            padding: 5px 15px;
+        }
+
+        .search-form input {
+            border: none;
+            background: transparent;
+            flex-grow: 1;
+            padding: 8px;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .search-form i {
+            color: #888;
+        }
+
+        /* 카테고리 탭 스타일 */
+        .category-scroll {
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+            gap: 8px;
+            padding: 10px 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .category-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-item {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid #eee;
+            background: #fff;
+            color: #666;
+            font-size: 0.95rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .tab-item.active {
+            background: #ff4d01;
+            color: #fff;
+            border-color: #ff4d01;
+            font-weight: 600;
+        }
+
+        /* 상점 리스트 스타일 */
+        .store-list {
+            margin-top: 20px;
+        }
+
+        .store-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .store-img {
+            width: 110px;
+            height: 110px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+
+        .store-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .store-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .store-meta {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .store-tags {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #888;
+            border: 1px solid #eee;
+        }
+
+        .empty-result {
+            text-align: center;
+            padding: 60px 0;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="search-container">
+        <form class="search-form" th:action="@{/store/list}" method="get">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="search" name="keyword" th:value="${storeList.keyword}" placeholder="맛집 이름을 검색해보세요"/>
+            <button type="submit" style="display:none"></button>
+        </form>
+
+        <div class="category-scroll">
+            <a th:each="cate : ${storeList.categories}"
+               th:href="@{/store/list(categoryId=${cate.id}, keyword=${storeList.keyword})}"
+               class="tab-item"
+               th:classappend="${cate.id == storeList.selectedCategoryId} ? 'active'">
+                <i th:if="${cate.id == storeList.selectedCategoryId}" class="fa-solid fa-check"></i>
+                <span th:text="${cate.name}">카테고리명</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="store-list">
+        <div th:if="${#lists.isEmpty(storeList.stores)}" class="empty-result">
+            <i class="fa-solid fa-utensils fa-3x mb-3"></i>
+            <p>검색 결과가 없습니다.<br>다른 검색어나 카테고리를 선택해보세요.</p>
+        </div>
+
+        <a th:each="store : ${storeList.stores}" th:href="@{/store/detail/{id}(id=${store.id})}" class="store-item">
+            <img class="store-img"
+                 th:src="${store.thumbnailUrl != null and store.thumbnailUrl != 'noImage' and store.thumbnailUrl != 'NOIMAGE'}
+             ? @{/display/store/{id}/{file}(id=${store.id}, file=${store.thumbnailUrl})}
+             : '/images/NOIMAGE.jpg'"
+                 alt="상점사진"/>
+            <div class="store-info">
+                <div class="store-name" th:text="${store.name}">상점 이름</div>
+
+                <div class="store-meta">
+        <span style="color: #ff4d01; font-weight: 600;">
+            <i class="fa-solid fa-star"></i> 4.8
+        </span>
+                </div>
+
+                <div class="store-meta" style="margin-top: 2px;">
+                    <span th:text="${store.category.name}">카테고리</span>
+                    <span>·</span>
+                    <span th:text="${store.address}">동이름</span>
+                </div>
+
+                <div class="store-tags" style="margin-top: 6px;">
+        <span th:each="type : ${store.type}" class="tag">
+            <th:block th:switch="${type.name()}">
+                <span th:case="'REMOTE'">원격줄서기</span>
+                <span th:case="'FIELD'">현장대기</span>
+                <span th:case="'RESERVATION'">예약하기</span>
+            </th:block>
+        </span>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

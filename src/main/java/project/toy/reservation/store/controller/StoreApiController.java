@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import project.toy.reservation.global.common.ApiResponse;
-import project.toy.reservation.store.dto.StoreRequest.CategoryDto;
+import project.toy.reservation.store.dto.CategoryDto;
 import project.toy.reservation.store.dto.StoreRequest.ModifyRequest;
 import project.toy.reservation.store.dto.StoreRequest.Register;
 import project.toy.reservation.store.service.StoreService;
@@ -40,7 +40,7 @@ public class StoreApiController {
 
     @GetMapping("/category/children")
     public ResponseEntity<List<CategoryDto>> getChildrenCategory(@RequestParam("parentId")Long parentId){
-        List<CategoryDto> childCategory = storeService.getCategory(parentId);
+        List<CategoryDto> childCategory = storeService.getCategoryChildren(parentId);
         return ResponseEntity.ok(childCategory);
     }
 }

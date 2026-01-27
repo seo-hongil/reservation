@@ -27,8 +27,8 @@ public class SecurityConfig {
 
                 // URL 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/main", "/member/signup", "/member/login").permitAll()
-                        .requestMatchers("/images/**", "/slide/**").permitAll() // 정적 리소스 허용
+                        .requestMatchers("/", "/main", "/member/signup", "/member/login", "/store/list/**", "/store/detail/**", "/error").permitAll()
+                        .requestMatchers("/images/**", "/slide/**", "/display/**").permitAll() // 정적 리소스 허용
                         .anyRequest().authenticated()
                 )
 

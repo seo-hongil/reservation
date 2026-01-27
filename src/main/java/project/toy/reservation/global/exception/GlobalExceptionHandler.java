@@ -14,46 +14,55 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    /**
+     * @Valid 검증 실패 시 호출 (필드 에러 처리)
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException e) {
+    protected ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        log.warn("Validation Exception: {}", e.getMessage());
+
         Map<String, String> errors = new HashMap<>();
         e.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage()));
 
-        ErrorResponse response = ErrorResponse.builder()
-                .code("VALIDATION_ERROR")
-                .message("입력값이 올바르지 않습니다.")
+        final ErrorResponse response = ErrorResponse.builder()
+                .code(ErrorCode.INVALID_INPUT_VALUE.getCode())
+                .message(ErrorCode.INVALID_INPUT_VALUE.getMessage())
                 .errors(errors)
                 .build();
-
-        log.warn("MethodArgumentNotValidException: {}", e.getMessage());
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    }
-
-    @ExceptionHandler(BusinessException.class) // 직접 만든 예외 클래스
-    public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
-        ErrorCode errorCode = e.getErrorCode();
-
-        ErrorResponse response = ErrorResponse.builder()
-                .code(errorCode.getCode())
-                .message(e.getDetailMessage())
-                .build();
-
-        log.warn("Business Exception: {}", e.getDetailMessage());
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleAllExceptions(Exception e) {
-        ErrorResponse response = ErrorResponse.builder()
-                .code("SERVER_ERROR")
-                .message("서버에서 오류가 발생했습니다.")
+    /**
+     * 비즈니스 로직 에러 처리
+     */
+    @ExceptionHandler(BusinessException.class)
+    protected ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
+        log.warn("Business Exception: code={}, message={}", e.getErrorCode().getCode(), e.getDetailMessage());
+
+        ErrorCode errorCode = e.getErrorCode();
+
+        final ErrorResponse response = ErrorResponse.builder()
+                .code(errorCode.getCode())
+                .message(e.getDetailMessage())
                 .build();
 
-        log.warn("Exception: {}", e.getMessage());
+        return new ResponseEntity<>(response, errorCode.getStatus());
+    }
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    /**
+     * 최상위 예외 처리 (서버 에러)
+     */
+    @ExceptionHandler(Exception.class)
+    protected ResponseEntity<ErrorResponse> handleException(Exception e) {
+        log.error("Internal Server Error: ", e);
+
+        final ErrorResponse response = ErrorResponse.builder()
+                .code(ErrorCode.INTERNAL_SERVER_ERROR.getCode())
+                .message(ErrorCode.INTERNAL_SERVER_ERROR.getMessage())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
